@@ -20,46 +20,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path('functions.php')
-          text = p.read_text(encoding='utf-8')
-          marker = "sweat_show_all_services_on_sports_page"
-          snippet = r'''
-
-// Bracelli Club: always show every published sport on the "I nostri sport" page.
-if ( ! function_exists( 'sweat_show_all_services_on_sports_page' ) ) {
-	function sweat_show_all_services_on_sports_page( $atts, $sc ) {
-		if ( 'trx_sc_services' !== $sc ) {
-			return $atts;
-		}
-
-		$is_sports_page = is_page( array( 'I nostri sport', 'i-nostri-sport', 'nostri-sport', 'services' ) );
-		if ( ! $is_sports_page ) {
-			return $atts;
-		}
-
-		$post_type = defined( 'TRX_ADDONS_CPT_SERVICES_PT' ) ? TRX_ADDONS_CPT_SERVICES_PT : 'cpt_services';
-		$counts    = wp_count_posts( $post_type );
-		$published = isset( $counts->publish ) ? (int) $counts->publish : 0;
-
-		// Remove any manual selection/limit so newly created sports appear automatically.
-		$atts['ids']    = '';
-		$atts['cat']    = '';
-		$atts['offset'] = 0;
-		$atts['count']  = $published > 0 ? $published : 999;
-
-		return $atts;
-	}
-	add_filter( 'trx_addons_filter_sc_prepare_atts', 'sweat_show_all_services_on_sports_page', 20, 2 );
-}
-'''
-          if marker in text:
-              print('All-sports filter already present')
-          else:
-              p.write_text(text + snippet, encoding='utf-8')
-              print('Patched functions.php')
-          PY
+          if grep -Fq 'sweat_show_all_services_on_sports_page' functions.php; then
+            echo 'All-sports filter already present'
+          else
+            echo 'CgovLyBCcmFjZWxsaSBDbHViOiBhbHdheXMgc2hvdyBldmVyeSBwdWJsaXNoZWQgc3BvcnQgb24gdGhlICJJIG5vc3RyaSBzcG9ydCIgcGFnZS4KaWYgKCAhIGZ1bmN0aW9uX2V4aXN0cyggJ3N3ZWF0X3Nob3dfYWxsX3NlcnZpY2VzX29uX3Nwb3J0c19wYWdlJyApICkgewoJZnVuY3Rpb24gc3dlYXRfc2hvd19hbGxfc2VydmljZXNfb25fc3BvcnRzX3BhZ2UoICRhdHRzLCAkc2MgKSB7CgkJaWYgKCAndHJ4X3NjX3NlcnZpY2VzJyAhPT0gJHNjICkgewoJCQlyZXR1cm4gJGF0dHM7CgkJfQoKCQkkaXNfc3BvcnRzX3BhZ2UgPSBpc19wYWdlKCBhcnJheSggJ0kgbm9zdHJpIHNwb3J0JywgJ2ktbm9zdHJpLXNwb3J0JywgJ25vc3RyaS1zcG9ydCcsICdzZXJ2aWNlcycgKSApOwoJCWlmICggISAkaXNfc3BvcnRzX3BhZ2UgKSB7CgkJCXJldHVybiAkYXR0czsKCQl9CgoJCSRwb3N0X3R5cGUgPSBkZWZpbmVkKCAnVFJYX0FERE9OU19DUFRfU0VSVklDRVNfUFQnICkgPyBUUlhfQURET05TX0NQVF9TRVJWSUNFU19QVCA6ICdjcHRfc2VydmljZXMnOwoJCSRjb3VudHMgICAgPSB3cF9jb3VudF9wb3N0cyggJHBvc3RfdHlwZSApOwoJCSRwdWJsaXNoZWQgPSBpc3NldCggJGNvdW50cy0+cHVibGlzaCApID8gKGludCkgJGNvdW50cy0+cHVibGlzaCA6IDA7CgoJCS8vIFJlbW92ZSBhbnkgbWFudWFsIHNlbGVjdGlvbi9saW1pdCBzbyBuZXdseSBjcmVhdGVkIHNwb3J0cyBhcHBlYXIgYXV0b21hdGljYWxseS4KCQkkYXR0c1snaWRzJ10gICAgPSAnJzsKCQkkYXR0c1snY2F0J10gICAgPSAnJzsKCQkkYXR0c1snb2Zmc2V0J10gPSAwOwoJCSRhdHRzWydjb3VudCddICA9ICRwdWJsaXNoZWQgPiAwID8gJHB1Ymxpc2hlZCA6IDk5OTsKCgkJcmV0dXJuICRhdHRzOwoJfQoJYWRkX2ZpbHRlciggJ3RyeF9hZGRvbnNfZmlsdGVyX3NjX3ByZXBhcmVfYXR0cycsICdzd2VhdF9zaG93X2FsbF9zZXJ2aWNlc19vbl9zcG9ydHNfcGFnZScsIDIwLCAyICk7Cn0K' | base64 -d >> functions.php
+          fi
 
       - name: Validate PHP syntax
         run: php -l functions.php
@@ -73,8 +38,8 @@ if ( ! function_exists( 'sweat_show_all_services_on_sports_page' ) ) {
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then
-            echo "No changes to commit"
+            echo 'No changes to commit'
             exit 0
           fi
-          git commit -m "Show all sports on I nostri sport page"
+          git commit -m 'Show all sports on I nostri sport page'
           git push
