@@ -1,0 +1,39 @@
+name: Show all services archive items
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-services-archive-all.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch functions.php
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -Fq 'sweat_show_all_services_archive' functions.php; then
+            echo 'Archive fix already present'
+          else
+            echo 'CgovLyBCcmFjZWxsaSBDbHViOiBzaG93IGFsbCBwdWJsaXNoZWQgc3BvcnRzIG9uIHRoZSBUaGVtZVJFWCBTZXJ2aWNlcyBhcmNoaXZlICgvc2VydmljZXMvKS4KaWYgKCAhIGZ1bmN0aW9uX2V4aXN0cyggJ3N3ZWF0X3Nob3dfYWxsX3NlcnZpY2VzX2FyY2hpdmUnICkgKSB7CglmdW5jdGlvbiBzd2VhdF9zaG93X2FsbF9zZXJ2aWNlc19hcmNoaXZlKCAkcXVlcnkgKSB7CgkJaWYgKCBpc19hZG1pbigpIHx8ICEgJHF1ZXJ5LT5pc19tYWluX3F1ZXJ5KCkgKSB7CgkJCXJldHVybjsKCQl9CgoJCSRzZXJ2aWNlc19wb3N0X3R5cGUgPSBkZWZpbmVkKCAnVFJYX0FERE9OU19DUFRfU0VSVklDRVNfUFQnICkKCQkJPyBUUlhfQURET05TX0NQVF9TRVJWSUNFU19QVAoJCQk6ICdjcHRfc2VydmljZXMnOwoKCQlpZiAoICRxdWVyeS0+aXNfcG9zdF90eXBlX2FyY2hpdmUoICRzZXJ2aWNlc19wb3N0X3R5cGUgKSApIHsKCQkJJHF1ZXJ5LT5zZXQoICdwb3N0c19wZXJfcGFnZScsIC0xICk7CgkJCSRxdWVyeS0+c2V0KCAnbm9wYWdpbmcnLCB0cnVlICk7CgkJCSRxdWVyeS0+c2V0KCAncGFnZWQnLCAxICk7CgkJfQoJfQoJYWRkX2FjdGlvbiggJ3ByZV9nZXRfcG9zdHMnLCAnc3dlYXRfc2hvd19hbGxfc2VydmljZXNfYXJjaGl2ZScsIDk5OSApOwp9Cg==' | base64 -d >> functions.php
+          fi
+
+      - name: Validate PHP
+        run: php -l functions.php
+
+      - name: Commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/apply-services-archive-all.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Show all sports in Services archive'
+          git push
