@@ -1,0 +1,36 @@
+@media (max-width: 1279px) {
+  .sc_testimonials_qw-date .sc_testimonials_item_content .sc_testimonials_item_date,
+  .sc_testimonials_qw-date .sc_testimonials_item_author .sc_testimonials_item_author_data .sc_testimonials_item_author_subtitle {
+    font-size: 14px;
+  }
+  .sc_testimonials_qw-big .sc_testimonials_item_author .sc_testimonials_item_author_data .sc_testimonials_item_author_subtitle {
+    font-size: 14px;
+  }
+  .sc_testimonials_qw-big .sc_testimonials_item_author .sc_testimonials_item_author_data .sc_testimonials_item_author_title,
+  .sc_testimonials_qw-date .sc_testimonials_item_author .sc_testimonials_item_author_data .sc_testimonials_item_author_title {
+    font-size: 17px;
+  }
+  .sc_services_qw-nodes .sc_services_item .sc_services_item_number {
+    line-height: 2.5em;
+  }
+  .sc_services_qw-price .sc_services_item_number {
+    font-size: 1.4em;
+    margin-top: -4%;
+  }
+  .sc_portfolio.sc_portfolio_qw-case .sc_portfolio_item .sc_portfolio_item_content .post-more-link {
+    font-size: 14px;
+  }
+}
+@media (max-width: 1023px) {
+  .sc_services_qw-stylish .sc_services_item .sc_services_item_more_link {
+    bottom: 1px;
+  }
+}
+@media (max-width: 767px) {
+  .sc_services_qw-nodes .sc_services_item .sc_services_item_number {
+    line-height: 2.4em;
+  }
+  .sc_services_qw-stylish .sc_services_item .sc_services_item_more_link {
+    bottom: -1px;
+  }
+}

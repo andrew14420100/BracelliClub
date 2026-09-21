@@ -1,0 +1,22 @@
+{
+  "exclude": {
+    "files": [
+      "skin.jpg",
+      "skin-setup.php",
+      "skin-demo-importer.php",
+      "css/__custom.css",
+      "theme-specific/trx_addons-layouts.php",
+      "extra-styles.css",
+      "extra-styles.scss",
+      "extra-styles.css.map",
+      "trx_addons/css/shapes/clouds_alt.svg",
+      "trx_addons/css/shapes/land.svg"
+    ],
+    "folders": [
+      "theme-specific/theme-about",
+      "languages",
+      "css/font-icons",
+      "css/font-face"
+    ]
+  }
+}
