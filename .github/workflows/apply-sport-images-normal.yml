@@ -1,0 +1,73 @@
+name: Normalize sport page images
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-sport-images-normal.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Remove opacity and filters from sport images
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='BRACELLI SPORT IMAGES - NORMAL OPACITY'
+          if grep -Fq "$marker" style.css; then
+            echo 'CSS override already present.'
+          else
+            cat >> style.css <<'CSS'
+
+/* BRACELLI SPORT IMAGES - NORMAL OPACITY
+   Keep all images on single sport/service pages fully visible and unfiltered. */
+body.single-cpt_services .page_content_wrap img,
+body.single-cpt_services .content_wrap img,
+body.single-cpt_services .content img,
+body.single-cpt_services .elementor img,
+body.single-cpt_services figure img,
+body.single-cpt_services .post_featured img,
+body.single-cpt_services .sc_services_item_thumb img,
+body.single-cpt_services .wp-block-image img {
+    opacity: 1 !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    mix-blend-mode: normal !important;
+}
+
+body.single-cpt_services .elementor-widget-image,
+body.single-cpt_services figure,
+body.single-cpt_services .post_featured,
+body.single-cpt_services .sc_services_item_thumb,
+body.single-cpt_services .wp-block-image {
+    opacity: 1 !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+}
+CSS
+          fi
+
+      - name: Verify CSS override
+        run: grep -n 'BRACELLI SPORT IMAGES - NORMAL OPACITY' style.css
+
+      - name: Commit change and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/apply-sport-images-normal.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+            exit 0
+          fi
+          git commit -m 'Remove opacity from sport page images'
+          git push
