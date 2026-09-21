@@ -1,3 +1,4 @@
+# Extracts the uploaded Sweat theme archive into the repository root.
 name: Extract Sweat theme
 
 on:
