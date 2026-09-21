@@ -207,3 +207,36 @@ body.single-cpt_services .wp-block-image {
     filter: none !important;
     -webkit-filter: none !important;
 }
+
+/* BRACELLI SPORTS ARCHIVE - 4 ITEMS PER ROW
+   Keep every published sport visible and arrange the archive in rows of four. */
+body.post-type-archive-cpt_services .sc_services_columns_wrap {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 30px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+}
+
+body.post-type-archive-cpt_services .sc_services_columns_wrap > [class*="trx_addons_column-"],
+body.post-type-archive-cpt_services .sc_services_columns_wrap > [class*="column-"] {
+    width: 100% !important;
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+}
+
+@media (max-width: 1024px) {
+    body.post-type-archive-cpt_services .sc_services_columns_wrap {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 767px) {
+    body.post-type-archive-cpt_services .sc_services_columns_wrap {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+}
