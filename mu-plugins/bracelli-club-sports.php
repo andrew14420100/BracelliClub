@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Bracelli Club - Sports Display Fix
- * Description: Mostra tutti gli sport pubblicati e li dispone 4 per riga nella pagina /our-services/.
- * Version: 1.1.0
+ * Description: Gestisce la griglia degli sport e le immagini dedicate alla Ginnastica artistica.
+ * Version: 1.2.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -66,3 +66,146 @@ if ( ! function_exists( 'bracelli_show_all_sports_archive' ) ) {
 	}
 	add_action( 'pre_get_posts', 'bracelli_show_all_sports_archive', 999 );
 }
+
+/**
+ * Recupera la scheda "Ginnastica artistica" anche se lo slug fosse stato
+ * modificato manualmente in WordPress.
+ */
+function bracelli_get_artistic_gymnastics_post() {
+	$post_type = defined( 'TRX_ADDONS_CPT_SERVICES_PT' )
+		? TRX_ADDONS_CPT_SERVICES_PT
+		: 'cpt_services';
+	$post = get_page_by_path( 'ginnastica-artistica', OBJECT, $post_type );
+
+	if ( $post instanceof WP_Post ) {
+		return $post;
+	}
+
+	$matches = get_posts(
+		array(
+			'post_type'              => $post_type,
+			'post_status'            => 'publish',
+			'title'                  => 'Ginnastica artistica',
+			'posts_per_page'         => 1,
+			'no_found_rows'          => true,
+			'suppress_filters'       => false,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+		)
+	);
+
+	return ! empty( $matches ) ? $matches[0] : null;
+}
+
+/**
+ * Importa una risorsa del tema nella Media Library una sola volta.
+ */
+function bracelli_import_sport_image( $relative_path, $asset_key, $title, $alt ) {
+	$existing = get_posts(
+		array(
+			'post_type'      => 'attachment',
+			'post_status'    => 'inherit',
+			'posts_per_page' => 1,
+			'meta_key'       => '_bracelli_asset_key',
+			'meta_value'     => $asset_key,
+			'fields'         => 'ids',
+		)
+	);
+
+	if ( ! empty( $existing ) ) {
+		return (int) $existing[0];
+	}
+
+	$source = trailingslashit( get_template_directory() ) . ltrim( $relative_path, '/' );
+	if ( ! is_readable( $source ) ) {
+		return 0;
+	}
+
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	require_once ABSPATH . 'wp-admin/includes/image.php';
+	require_once ABSPATH . 'wp-admin/includes/media.php';
+
+	$tmp = wp_tempnam( basename( $source ) );
+	if ( ! $tmp || ! copy( $source, $tmp ) ) {
+		return 0;
+	}
+
+	$file = array(
+		'name'     => basename( $source ),
+		'tmp_name' => $tmp,
+	);
+	$id = media_handle_sideload( $file, 0, $title );
+	if ( is_wp_error( $id ) ) {
+		@unlink( $tmp );
+		return 0;
+	}
+
+	update_post_meta( $id, '_bracelli_asset_key', $asset_key );
+	update_post_meta( $id, '_wp_attachment_image_alt', $alt );
+	return (int) $id;
+}
+
+/**
+ * Imposta la foto dell'atleta come immagine in evidenza e prepara la foto
+ * dello staff per il corpo della scheda sportiva.
+ */
+function bracelli_setup_artistic_gymnastics_images() {
+	$post = bracelli_get_artistic_gymnastics_post();
+	if ( ! $post ) {
+		return;
+	}
+
+	$featured_id = bracelli_import_sport_image(
+		'images/bracelli/ginnastica-artistica-in-evidenza.jpg',
+		'ginnastica-artistica-in-evidenza-v1',
+		'Ginnastica artistica - Bracelli Club',
+		'Atleta di ginnastica artistica in salto'
+	);
+	$inside_id = bracelli_import_sport_image(
+		'images/bracelli/ginnastica-artistica-staff.jpg',
+		'ginnastica-artistica-staff-v1',
+		'Staff Ginnastica artistica - Bracelli Club',
+		'Staff Bracelli Club nella palestra di ginnastica artistica'
+	);
+
+	if ( $featured_id && (int) get_post_thumbnail_id( $post->ID ) !== $featured_id ) {
+		set_post_thumbnail( $post->ID, $featured_id );
+	}
+	if ( $inside_id ) {
+		update_post_meta( $post->ID, '_bracelli_ginnastica_inside_image_id', $inside_id );
+	}
+}
+add_action( 'init', 'bracelli_setup_artistic_gymnastics_images', 30 );
+
+/**
+ * Inserisce la seconda fotografia in fondo al contenuto della sola scheda
+ * Ginnastica artistica, senza duplicarla nell'editor o nelle anteprime.
+ */
+function bracelli_add_artistic_gymnastics_inside_image( $content ) {
+	if ( is_admin() || ! is_singular() || ! in_the_loop() || ! is_main_query() ) {
+		return $content;
+	}
+
+	$post = bracelli_get_artistic_gymnastics_post();
+	if ( ! $post || (int) get_the_ID() !== (int) $post->ID ) {
+		return $content;
+	}
+
+	$image_id = (int) get_post_meta( $post->ID, '_bracelli_ginnastica_inside_image_id', true );
+	if ( ! $image_id ) {
+		return $content;
+	}
+
+	$image = wp_get_attachment_image(
+		$image_id,
+		'full',
+		false,
+		array(
+			'class'   => 'bracelli-ginnastica-artistic-staff',
+			'loading' => 'lazy',
+		)
+	);
+
+	return $content . '<figure class="wp-block-image size-full bracelli-ginnastica-artistic-staff-wrap">' . $image . '</figure>';
+}
+add_filter( 'the_content', 'bracelli_add_artistic_gymnastics_inside_image', 20 );
