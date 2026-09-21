@@ -180,3 +180,30 @@ div.ui-tabs .ui-tabs-nav .ui-tabs-anchor {
 }
 
 
+
+
+/* BRACELLI SPORT IMAGES - NORMAL OPACITY
+   Keep all images on single sport/service pages fully visible and unfiltered. */
+body.single-cpt_services .page_content_wrap img,
+body.single-cpt_services .content_wrap img,
+body.single-cpt_services .content img,
+body.single-cpt_services .elementor img,
+body.single-cpt_services figure img,
+body.single-cpt_services .post_featured img,
+body.single-cpt_services .sc_services_item_thumb img,
+body.single-cpt_services .wp-block-image img {
+    opacity: 1 !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    mix-blend-mode: normal !important;
+}
+
+body.single-cpt_services .elementor-widget-image,
+body.single-cpt_services figure,
+body.single-cpt_services .post_featured,
+body.single-cpt_services .sc_services_item_thumb,
+body.single-cpt_services .wp-block-image {
+    opacity: 1 !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+}
