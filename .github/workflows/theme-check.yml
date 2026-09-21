@@ -141,13 +141,9 @@ jobs:
             --dbhost=127.0.0.1:3306 \
             --skip-check \
             --allow-root
-          cat >> "$WP_DIR/wp-config.php" <<'PHP'
-          
-define( 'WP_DEBUG', true );
-define( 'WP_DEBUG_LOG', true );
-define( 'WP_DEBUG_DISPLAY', false );
-@ini_set( 'display_errors', 0 );
-PHP
+          wp config set WP_DEBUG true --raw --path="$WP_DIR" --allow-root
+          wp config set WP_DEBUG_LOG true --raw --path="$WP_DIR" --allow-root
+          wp config set WP_DEBUG_DISPLAY false --raw --path="$WP_DIR" --allow-root
           wp core install \
             --path="$WP_DIR" \
             --url=http://127.0.0.1:8080 \
@@ -173,16 +169,24 @@ PHP
           wp server --path="$WP_DIR" --host=127.0.0.1 --port=8080 > "$RUNNER_TEMP/wp-server.log" 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
           for i in {1..30}; do
             if curl -fsS http://127.0.0.1:8080/ >/dev/null; then
+              ready=1
               break
             fi
             sleep 1
           done
+          if [ "$ready" -ne 1 ]; then
+            cat "$RUNNER_TEMP/wp-server.log" || true
+            exit 1
+          fi
           curl -fSs http://127.0.0.1:8080/ -o "$RUNNER_TEMP/home.html"
-          curl -fSs 'http://127.0.0.1:8080/?page_id=2' -o "$RUNNER_TEMP/page.html" || true
+          curl -fSs 'http://127.0.0.1:8080/?page_id=2' -o "$RUNNER_TEMP/page.html"
           test -s "$RUNNER_TEMP/home.html"
+          test -s "$RUNNER_TEMP/page.html"
           echo "Home response bytes: $(wc -c < "$RUNNER_TEMP/home.html")"
+          echo "Page response bytes: $(wc -c < "$RUNNER_TEMP/page.html")"
           echo '=== WordPress debug.log ==='
           if [ -f "$WP_DIR/wp-content/debug.log" ]; then
             cat "$WP_DIR/wp-content/debug.log"
