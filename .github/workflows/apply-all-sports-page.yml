@@ -1,0 +1,80 @@
+name: Show all sports on sports page
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-all-sports-page.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Patch functions.php
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('functions.php')
+          text = p.read_text(encoding='utf-8')
+          marker = "sweat_show_all_services_on_sports_page"
+          snippet = r'''
+
+// Bracelli Club: always show every published sport on the "I nostri sport" page.
+if ( ! function_exists( 'sweat_show_all_services_on_sports_page' ) ) {
+	function sweat_show_all_services_on_sports_page( $atts, $sc ) {
+		if ( 'trx_sc_services' !== $sc ) {
+			return $atts;
+		}
+
+		$is_sports_page = is_page( array( 'I nostri sport', 'i-nostri-sport', 'nostri-sport', 'services' ) );
+		if ( ! $is_sports_page ) {
+			return $atts;
+		}
+
+		$post_type = defined( 'TRX_ADDONS_CPT_SERVICES_PT' ) ? TRX_ADDONS_CPT_SERVICES_PT : 'cpt_services';
+		$counts    = wp_count_posts( $post_type );
+		$published = isset( $counts->publish ) ? (int) $counts->publish : 0;
+
+		// Remove any manual selection/limit so newly created sports appear automatically.
+		$atts['ids']    = '';
+		$atts['cat']    = '';
+		$atts['offset'] = 0;
+		$atts['count']  = $published > 0 ? $published : 999;
+
+		return $atts;
+	}
+	add_filter( 'trx_addons_filter_sc_prepare_atts', 'sweat_show_all_services_on_sports_page', 20, 2 );
+}
+'''
+          if marker in text:
+              print('All-sports filter already present')
+          else:
+              p.write_text(text + snippet, encoding='utf-8')
+              print('Patched functions.php')
+          PY
+
+      - name: Validate PHP syntax
+        run: php -l functions.php
+
+      - name: Commit patch and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/apply-all-sports-page.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Show all sports on I nostri sport page"
+          git push
