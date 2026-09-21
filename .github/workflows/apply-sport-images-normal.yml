@@ -20,39 +20,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          marker='BRACELLI SPORT IMAGES - NORMAL OPACITY'
-          if grep -Fq "$marker" style.css; then
-            echo 'CSS override already present.'
-          else
-            cat >> style.css <<'CSS'
-
-/* BRACELLI SPORT IMAGES - NORMAL OPACITY
-   Keep all images on single sport/service pages fully visible and unfiltered. */
-body.single-cpt_services .page_content_wrap img,
-body.single-cpt_services .content_wrap img,
-body.single-cpt_services .content img,
-body.single-cpt_services .elementor img,
-body.single-cpt_services figure img,
-body.single-cpt_services .post_featured img,
-body.single-cpt_services .sc_services_item_thumb img,
-body.single-cpt_services .wp-block-image img {
-    opacity: 1 !important;
-    filter: none !important;
-    -webkit-filter: none !important;
-    mix-blend-mode: normal !important;
-}
-
-body.single-cpt_services .elementor-widget-image,
-body.single-cpt_services figure,
-body.single-cpt_services .post_featured,
-body.single-cpt_services .sc_services_item_thumb,
-body.single-cpt_services .wp-block-image {
-    opacity: 1 !important;
-    filter: none !important;
-    -webkit-filter: none !important;
-}
-CSS
-          fi
+          python3 -c 'from pathlib import Path; p=Path("style.css"); t=p.read_text(encoding="utf-8"); marker="BRACELLI SPORT IMAGES - NORMAL OPACITY"; block="\n\n/* BRACELLI SPORT IMAGES - NORMAL OPACITY\n   Keep all images on single sport/service pages fully visible and unfiltered. */\nbody.single-cpt_services .page_content_wrap img,\nbody.single-cpt_services .content_wrap img,\nbody.single-cpt_services .content img,\nbody.single-cpt_services .elementor img,\nbody.single-cpt_services figure img,\nbody.single-cpt_services .post_featured img,\nbody.single-cpt_services .sc_services_item_thumb img,\nbody.single-cpt_services .wp-block-image img {\n    opacity: 1 !important;\n    filter: none !important;\n    -webkit-filter: none !important;\n    mix-blend-mode: normal !important;\n}\n\nbody.single-cpt_services .elementor-widget-image,\nbody.single-cpt_services figure,\nbody.single-cpt_services .post_featured,\nbody.single-cpt_services .sc_services_item_thumb,\nbody.single-cpt_services .wp-block-image {\n    opacity: 1 !important;\n    filter: none !important;\n    -webkit-filter: none !important;\n}\n"; p.write_text(t if marker in t else t+block, encoding="utf-8")'
 
       - name: Verify CSS override
         run: grep -n 'BRACELLI SPORT IMAGES - NORMAL OPACITY' style.css
