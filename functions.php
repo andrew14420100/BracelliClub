@@ -1197,3 +1197,24 @@ if ( ! function_exists( 'sweat_show_all_services_on_sports_page' ) ) {
 	}
 	add_filter( 'trx_addons_filter_sc_prepare_atts', 'sweat_show_all_services_on_sports_page', 20, 2 );
 }
+
+
+// Bracelli Club: show all published sports on the ThemeREX Services archive (/services/).
+if ( ! function_exists( 'sweat_show_all_services_archive' ) ) {
+	function sweat_show_all_services_archive( $query ) {
+		if ( is_admin() || ! $query->is_main_query() ) {
+			return;
+		}
+
+		$services_post_type = defined( 'TRX_ADDONS_CPT_SERVICES_PT' )
+			? TRX_ADDONS_CPT_SERVICES_PT
+			: 'cpt_services';
+
+		if ( $query->is_post_type_archive( $services_post_type ) ) {
+			$query->set( 'posts_per_page', -1 );
+			$query->set( 'nopaging', true );
+			$query->set( 'paged', 1 );
+		}
+	}
+	add_action( 'pre_get_posts', 'sweat_show_all_services_archive', 999 );
+}
