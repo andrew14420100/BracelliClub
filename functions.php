@@ -1169,3 +1169,31 @@ if ( ! function_exists( 'sweat_load_required_plugins' ) ) {
 		}
 	}
 }
+
+
+// Bracelli Club: always show every published sport on the "I nostri sport" page.
+if ( ! function_exists( 'sweat_show_all_services_on_sports_page' ) ) {
+	function sweat_show_all_services_on_sports_page( $atts, $sc ) {
+		if ( 'trx_sc_services' !== $sc ) {
+			return $atts;
+		}
+
+		$is_sports_page = is_page( array( 'I nostri sport', 'i-nostri-sport', 'nostri-sport', 'services' ) );
+		if ( ! $is_sports_page ) {
+			return $atts;
+		}
+
+		$post_type = defined( 'TRX_ADDONS_CPT_SERVICES_PT' ) ? TRX_ADDONS_CPT_SERVICES_PT : 'cpt_services';
+		$counts    = wp_count_posts( $post_type );
+		$published = isset( $counts->publish ) ? (int) $counts->publish : 0;
+
+		// Remove any manual selection/limit so newly created sports appear automatically.
+		$atts['ids']    = '';
+		$atts['cat']    = '';
+		$atts['offset'] = 0;
+		$atts['count']  = $published > 0 ? $published : 999;
+
+		return $atts;
+	}
+	add_filter( 'trx_addons_filter_sc_prepare_atts', 'sweat_show_all_services_on_sports_page', 20, 2 );
+}
