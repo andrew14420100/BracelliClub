@@ -25,40 +25,15 @@ jobs:
           p = Path('functions.php')
           text = p.read_text(encoding='utf-8')
           marker = "if ( ! defined( 'SWEAT_CHILD_URL' ) ) {\n\tdefine( 'SWEAT_CHILD_URL', trailingslashit( get_stylesheet_directory_uri() ) );\n}\n"
-          snippet = r'''
-
-// Performance safeguard for ThemeREX Addons.
-// Disable per-request site visit statistics, which otherwise read, sort and rewrite
-// the full visits cache on every frontend request.
-if ( ! function_exists( 'sweat_disable_trx_addons_visit_statistics' ) ) {
-	function sweat_disable_trx_addons_visit_statistics( $enabled ) {
-		return false;
-	}
-	add_filter( 'trx_addons_filter_save_site_visits', 'sweat_disable_trx_addons_visit_statistics', 1 );
-}
-
-// Remove the existing ThemeREX visits cache once after deploying this safeguard.
-if ( ! function_exists( 'sweat_clear_trx_addons_visit_cache_once' ) ) {
-	function sweat_clear_trx_addons_visit_cache_once() {
-		if ( get_option( 'sweat_trx_visits_cache_cleared', '0' ) === '1' ) {
-			return;
-		}
-		if ( function_exists( 'trx_addons_cache_delete_storage' ) ) {
-			trx_addons_cache_delete_storage( 'trx_addons_site_visits' );
-			update_option( 'sweat_trx_visits_cache_cleared', '1', false );
-		}
-	}
-	add_action( 'init', 'sweat_clear_trx_addons_visit_cache_once', 1 );
-}
-'''
-          if 'sweat_disable_trx_addons_visit_statistics' in text:
-              print('ThemeREX performance safeguard already present; no patch needed.')
-          else:
+          snippet = "\n\n// Performance safeguard for ThemeREX Addons.\n// Disable per-request site visit statistics, which otherwise read, sort and rewrite\n// the full visits cache on every frontend request.\nif ( ! function_exists( 'sweat_disable_trx_addons_visit_statistics' ) ) {\n\tfunction sweat_disable_trx_addons_visit_statistics( $enabled ) {\n\t\treturn false;\n\t}\n\tadd_filter( 'trx_addons_filter_save_site_visits', 'sweat_disable_trx_addons_visit_statistics', 1 );\n}\n\n// Remove the existing ThemeREX visits cache once after deploying this safeguard.\nif ( ! function_exists( 'sweat_clear_trx_addons_visit_cache_once' ) ) {\n\tfunction sweat_clear_trx_addons_visit_cache_once() {\n\t\tif ( get_option( 'sweat_trx_visits_cache_cleared', '0' ) === '1' ) {\n\t\t\treturn;\n\t\t}\n\t\tif ( function_exists( 'trx_addons_cache_delete_storage' ) ) {\n\t\t\ttrx_addons_cache_delete_storage( 'trx_addons_site_visits' );\n\t\t\tupdate_option( 'sweat_trx_visits_cache_cleared', '1', false );\n\t\t}\n\t}\n\tadd_action( 'init', 'sweat_clear_trx_addons_visit_cache_once', 1 );\n}\n"
+          if 'sweat_disable_trx_addons_visit_statistics' not in text:
               if marker not in text:
                   raise SystemExit('Expected constants marker not found in functions.php')
               text = text.replace(marker, marker + snippet, 1)
               p.write_text(text, encoding='utf-8')
               print('Patched functions.php')
+          else:
+              print('ThemeREX performance safeguard already present')
           PY
 
       - name: Validate PHP syntax
