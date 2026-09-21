@@ -19,6 +19,31 @@ if ( ! defined( 'SWEAT_CHILD_URL' ) ) {
 	define( 'SWEAT_CHILD_URL', trailingslashit( get_stylesheet_directory_uri() ) );
 }
 
+
+// Performance safeguard for ThemeREX Addons.
+// Disable per-request site visit statistics, which otherwise read, sort and rewrite
+// the full visits cache on every frontend request.
+if ( ! function_exists( 'sweat_disable_trx_addons_visit_statistics' ) ) {
+	function sweat_disable_trx_addons_visit_statistics( $enabled ) {
+		return false;
+	}
+	add_filter( 'trx_addons_filter_save_site_visits', 'sweat_disable_trx_addons_visit_statistics', 1 );
+}
+
+// Remove the existing ThemeREX visits cache once after deploying this safeguard.
+if ( ! function_exists( 'sweat_clear_trx_addons_visit_cache_once' ) ) {
+	function sweat_clear_trx_addons_visit_cache_once() {
+		if ( get_option( 'sweat_trx_visits_cache_cleared', '0' ) === '1' ) {
+			return;
+		}
+		if ( function_exists( 'trx_addons_cache_delete_storage' ) ) {
+			trx_addons_cache_delete_storage( 'trx_addons_site_visits' );
+			update_option( 'sweat_trx_visits_cache_cleared', '1', false );
+		}
+	}
+	add_action( 'init', 'sweat_clear_trx_addons_visit_cache_once', 1 );
+}
+
 //-------------------------------------------------------
 //-- Theme init
 //-------------------------------------------------------
