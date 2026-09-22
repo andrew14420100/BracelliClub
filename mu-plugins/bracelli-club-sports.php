@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Bracelli Club - Sports Display Fix
- * Description: Gestisce la griglia degli sport e le immagini dedicate alla Ginnastica artistica.
- * Version: 1.2.0
+ * Description: Gestisce la griglia degli sport, le immagini dedicate e la pagina Listino.
+ * Version: 1.3.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -209,3 +209,73 @@ function bracelli_add_artistic_gymnastics_inside_image( $content ) {
 	return $content . '<figure class="wp-block-image size-full bracelli-ginnastica-artistic-staff-wrap">' . $image . '</figure>';
 }
 add_filter( 'the_content', 'bracelli_add_artistic_gymnastics_inside_image', 20 );
+
+/**
+ * Crea la pagina pubblica /listino/ con i tre fogli informativi forniti dal
+ * centro sportivo. Le fotografie vengono prima importate nella Media Library,
+ * così WordPress può generare le dimensioni responsive per desktop e mobile.
+ */
+function bracelli_create_listino_page() {
+	$images = array(
+		array(
+			'path'  => 'images/bracelli/listino-ginnastica-danza.jpg',
+			'key'   => 'listino-ginnastica-danza-2026-v1',
+			'title' => 'Listino Ginnastica, Danza e Ballo 2026-2027',
+			'alt'   => 'Listino corsi di ginnastica, danza e ballo Bracelli Club 2026-2027',
+		),
+		array(
+			'path'  => 'images/bracelli/listino-arti-marziali-pattinaggio-calcio.jpg',
+			'key'   => 'listino-arti-marziali-pattinaggio-calcio-2026-v1',
+			'title' => 'Listino Arti marziali, Pattinaggio e Calcio 2026-2027',
+			'alt'   => 'Listino corsi di arti marziali, pattinaggio artistico e calcio Bracelli Club 2026-2027',
+		),
+		array(
+			'path'  => 'images/bracelli/listino-inizio-corsi-2026-2027.jpg',
+			'key'   => 'listino-inizio-corsi-2026-2027-v1',
+			'title' => 'Inizio corsi stagione 2026-2027',
+			'alt'   => 'Date di inizio dei corsi Bracelli Club per la stagione 2026-2027',
+		),
+	);
+
+	$attachment_ids = array();
+	foreach ( $images as $image ) {
+		$id = bracelli_import_sport_image( $image['path'], $image['key'], $image['title'], $image['alt'] );
+		if ( $id ) {
+			$attachment_ids[] = $id;
+		}
+	}
+
+	// Attende il caricamento di tutti e tre i file prima di creare la pagina.
+	if ( 3 !== count( $attachment_ids ) ) {
+		return;
+	}
+
+	$page = get_page_by_path( 'listino', OBJECT, 'page' );
+	if ( $page instanceof WP_Post ) {
+		return;
+	}
+
+	$blocks = "<!-- bracelli-listino-2026 -->\n";
+	foreach ( $attachment_ids as $attachment_id ) {
+		$url = wp_get_attachment_image_url( $attachment_id, 'full' );
+		$alt = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
+		$blocks .= sprintf(
+			"<!-- wp:image {\"id\":%1\$d,\"sizeSlug\":\"full\",\"linkDestination\":\"media\",\"align\":\"center\"} -->\n<figure class=\"wp-block-image aligncenter size-full\"><a href=\"%2\$s\"><img src=\"%2\$s\" alt=\"%3\$s\" class=\"wp-image-%1\$d\"/></a></figure>\n<!-- /wp:image -->\n",
+			$attachment_id,
+			esc_url( $url ),
+			esc_attr( $alt )
+		);
+	}
+
+	wp_insert_post(
+		array(
+			'post_title'   => 'Listino',
+			'post_name'    => 'listino',
+			'post_content' => $blocks,
+			'post_status'  => 'publish',
+			'post_type'    => 'page',
+		),
+		true
+	);
+}
+add_action( 'init', 'bracelli_create_listino_page', 40 );
